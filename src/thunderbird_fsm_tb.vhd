@@ -132,6 +132,9 @@ begin
 	   w_left <= '0'; w_right <= '1'; wait for k_clk_period; --wait for clock allows
 	   -- for the led to turn on before asserting
 	   -- checks to make sure no left lights turn on
+	   -- these assert statements work because it waits for the next iteration of the clock period to make sure that right
+       -- at that exact moment, the state of the clock is asserted to have the correct signal or not.
+       -- this code works the same with with the left signal.
           assert w_lights_L = "000" report "should have no left lights on" severity failure;
        -- waits for next state
           wait for k_clk_period;
@@ -147,11 +150,12 @@ begin
           assert w_lights_R = "111" report "should have three right lights on" severity failure;
        -- makes sure that when zeroed out, no lights are shown.
        w_left <= '0'; w_right <= '0'; wait for k_clk_period;
-          assert w_lights_L = "000" report "should have no lights showing" severity failure; 
+       -- finally, asserts that a k_clkPeriod after the blinkers turn off that
+       -- the lights do in fact turn off.
+          assert w_lights_L = "000" report "should have no lights showing" severity failure;
+          wait for k_clk_period; 
           assert w_lights_R = "000" report "should have no lights showing" severity failure;
-       -- these assert statements work because it waits for the next iteration of the clock period to make sure that right
-       -- at that exact moment, the state of the clock is asserted to have the correct signal or not.
-       -- this code works the same with with the left signal.
 	-----------------------------------------------------	
+	wait;
     end process;
 end test_bench;
