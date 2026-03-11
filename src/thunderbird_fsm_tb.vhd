@@ -112,9 +112,6 @@ begin
 		w_reset <= '0';
 		wait for k_clk_period*1;
 		
-		w_left <= '0'; w_right <= '0'; wait for k_clk_period;
-          assert w_lights_L = "000" report "should have no lights showing" severity failure;
-          assert w_lights_R = "000" report "should have no lights showing" severity failure;
 		-- car shows up at red light
 		w_left <= '1'; w_right <= '1'; wait for k_clk_period;
           assert w_lights_L = "111" report "should have hazards on" severity failure;
@@ -127,15 +124,34 @@ begin
           assert w_lights_L = "011" report "should have two left lights on" severity failure;
           wait for k_clk_period;
           assert w_lights_L = "111" report "should have three left lights on" severity failure;
-	   w_left <= '0'; w_right <= '1'; wait for k_clk_period;
+       w_left <= '1'; w_right <= '0'; wait for k_clk_period*2;
+       -- this tests to make sure that the left light is able
+       -- to complete a cycle before moving on to the right light  
+       w_left <= '0'; w_right <= '1'; wait for k_clk_period*2;
+          assert w_lights_L = "111" report "should finish cycle" severity failure;
+	   w_left <= '0'; w_right <= '1'; wait for k_clk_period; --wait for clock allows
+	   -- for the led to turn on before asserting
+	   -- checks to make sure no left lights turn on
           assert w_lights_L = "000" report "should have no left lights on" severity failure;
+       -- waits for next state
           wait for k_clk_period;
+       -- makes sure the least significant right light turns on
           assert w_lights_R = "001" report "should have one right light on" severity failure;
+       -- waits for the next state
           wait for k_clk_period;
+       -- makes sure the next right light turns on with the last one.
           assert w_lights_R = "011" report "should have two right lights on" severity failure;
+       -- waits again
           wait for k_clk_period;
+       -- finally, asserts all lights have turned on after the two iterations.
           assert w_lights_R = "111" report "should have three right lights on" severity failure;
-          wait for k_clk_period;
+       -- makes sure that when zeroed out, no lights are shown.
+       w_left <= '0'; w_right <= '0'; wait for k_clk_period;
+          assert w_lights_L = "000" report "should have no lights showing" severity failure; 
+          assert w_lights_R = "000" report "should have no lights showing" severity failure;
+       -- these assert statements work because it waits for the next iteration of the clock period to make sure that right
+       -- at that exact moment, the state of the clock is asserted to have the correct signal or not.
+       -- this code works the same with with the left signal.
 	-----------------------------------------------------	
     end process;
 end test_bench;
